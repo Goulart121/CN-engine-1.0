@@ -1,0 +1,20 @@
+﻿{
+  "name": "cn-engine-web",
+  "version": "0.1.0",
+  "description": "CN Engine Web 2D editor/runtime prototype",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "test:watch": "node --test --watch \"tests/*.test.mjs\""
+  },
+  "keywords": [
+    "engine",
+    "2d",
+    "editor",
+    "web"
+  ],
+  "author": "",
+  "license": "MIT"
+}

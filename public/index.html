@@ -1,0 +1,921 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CN Engine Web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <span class="brand">CN Engine Web</span>
+          <span class="version">alpha v0.1</span>
+        </div>
+
+        <div class="mode-controls">
+          <button id="btnEdit" class="btn btn-mode active">EDITAR</button>
+          <button id="btnPlay" class="btn btn-mode">JOGAR</button>
+          <div class="editor-mode-toggle">
+            <button id="btnWorkspace2D" class="btn btn-tool active">Editor 2D</button>
+            <button id="btnWorkspace3D" class="btn btn-tool">Editor 3D</button>
+          </div>
+          <span class="key-tip">Tab alterna modo | E interage | Ctrl+Z / Ctrl+Y | Ctrl+D / Del</span>
+        </div>
+
+        <div class="top-actions">
+          <button id="btnUndo" class="btn" disabled>Desfazer</button>
+          <button id="btnRedo" class="btn" disabled>Refazer</button>
+          <button id="btnSaveGame" class="btn">Salvar Jogo</button>
+          <button id="btnLoadGame" class="btn">Carregar Jogo</button>
+          <button id="btnExportJson" class="btn">Salvar JSON</button>
+          <button id="btnImportJson" class="btn">Carregar JSON</button>
+        </div>
+      </header>
+
+      <main class="workspace" id="workspace2d">
+        <aside class="panel left-panel">
+          <div class="panel-head">
+            <h2>Projeto</h2>
+            <span id="sceneCountBadge" class="badge">0 cenas</span>
+          </div>
+
+          <section class="panel-section">
+            <div class="section-head">
+              <h3>Cenas</h3>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnSceneNew" class="btn btn-tool">+ Nova</button>
+              <button id="btnSceneDuplicate" class="btn btn-tool">Duplicar</button>
+              <button id="btnSceneDelete" class="btn btn-tool">Excluir</button>
+            </div>
+            <div id="projectSceneList" class="scene-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <h3>Template de Projeto</h3>
+            <select id="projectTemplateSelect">
+              <option value="top-down" selected>Top-Down</option>
+              <option value="plataforma">Plataforma</option>
+              <option value="arena">Arena</option>
+              <option value="puzzle">Puzzle</option>
+            </select>
+            <button id="btnApplyProjectTemplate" class="btn btn-tool">Aplicar em Nova Cena</button>
+            <small class="panel-help">Cria uma nova cena com o template escolhido, sem apagar as cenas atuais.</small>
+          </section>
+
+          <div class="tool-grid">
+            <button id="toolSelect" class="btn btn-tool active">Selecionar</button>
+            <button id="toolPaint" class="btn btn-tool">Pintar Tiles</button>
+            <button id="toolAddWall" class="btn btn-tool">+ Parede</button>
+          </div>
+
+          <section class="panel-section">
+            <div class="section-head">
+              <h3>Hierarquia</h3>
+              <span id="objectCountBadge" class="badge subtle">0 objetos</span>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnDuplicateSelection" class="btn btn-tool">Duplicar Sel.</button>
+              <button id="btnDeleteSelection" class="btn btn-tool">Excluir Sel.</button>
+            </div>
+            <div id="sceneList" class="scene-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-head">
+              <h3>Prefabs</h3>
+              <span id="prefabCountBadge" class="badge subtle">0 prefabs</span>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnSavePrefab" class="btn btn-tool">Salvar Sel.</button>
+              <button id="btnInstantiatePrefab" class="btn btn-tool">Instanciar</button>
+            </div>
+            <div id="prefabList" class="scene-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <h3>Ferramentas de Grupo</h3>
+            <div class="mini-tool-grid">
+              <button id="btnAlignLeft" class="btn btn-tool">Alinhar Esq.</button>
+              <button id="btnAlignTop" class="btn btn-tool">Alinhar Topo</button>
+              <button id="btnAlignHCenter" class="btn btn-tool">Centralizar H</button>
+              <button id="btnAlignVCenter" class="btn btn-tool">Centralizar V</button>
+              <button id="btnDistributeH" class="btn btn-tool">Distribuir H</button>
+              <button id="btnDistributeV" class="btn btn-tool">Distribuir V</button>
+            </div>
+            <small class="panel-help">Use em multiselecao para alinhar e distribuir o grupo.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Ferramenta de Pintura</h3>
+            <div class="paint-tool-grid">
+              <button id="paintToolBrush" class="btn btn-tool active">Pincel</button>
+              <button id="paintToolRandom" class="btn btn-tool">Pincel Aleatorio</button>
+              <button id="paintToolLine" class="btn btn-tool">Linha</button>
+              <button id="paintToolRect" class="btn btn-tool">Retangulo</button>
+              <button id="paintToolFill" class="btn btn-tool">Preencher</button>
+              <button id="paintToolEyedropper" class="btn btn-tool">Conta-gotas</button>
+            </div>
+            <label class="panel-inline-label">
+              Tamanho do Pincel
+              <input id="paintBrushSize" type="number" min="1" max="8" step="1" value="1" />
+            </label>
+            <label class="panel-inline-label">
+              Forma do Pincel
+              <select id="paintBrushShape">
+                <option value="square" selected>Quadrado</option>
+                <option value="circle">Circulo</option>
+              </select>
+            </label>
+            <label class="panel-inline-label">
+              Espessura da Linha
+              <input id="paintLineThickness" type="number" min="1" max="8" step="1" value="1" />
+            </label>
+            <label class="checkbox-row">
+              <input id="paintAutoTile" type="checkbox" checked />
+              <span>AutoTile ativo</span>
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Objetos de Jogo</h3>
+            <div class="mini-tool-grid">
+              <button id="btnAddSpawn" class="btn btn-tool">+ Ponto Inicial</button>
+              <button id="btnAddTrigger" class="btn btn-tool">+ Gatilho</button>
+              <button id="btnAddPortal" class="btn btn-tool">+ Portal</button>
+              <button id="btnAddCheckpoint" class="btn btn-tool">+ Ponto de Controle</button>
+              <button id="btnAddDoor" class="btn btn-tool">+ Porta</button>
+              <button id="btnAddCameraZone" class="btn btn-tool">+ Zona de Camera</button>
+              <button id="btnAddSpriteShape" class="btn btn-tool">+ Forma Sprite</button>
+              <button id="btnAddLight2D" class="btn btn-tool">+ Luz 2D</button>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <h3>Espaco da Visualizacao</h3>
+            <select id="spaceModeSelect">
+              <option value="2d" selected>2D</option>
+              <option value="3d-preview">Previa 3D</option>
+            </select>
+            <small class="panel-help">Previa visual experimental para preparar a ponte do editor 2D para 3D.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Renderizador da Visualizacao</h3>
+            <select id="viewportRendererSelect">
+              <option value="scene" selected>Tela da Cena</option>
+              <option value="native-3d">3D Nativo</option>
+            </select>
+            <small class="panel-help">Escolha se a visualizacao principal renderiza a cena 2D/previa ou o renderizador 3D nativo editavel.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Camada Ativa</h3>
+            <select id="tileLayerSelect">
+              <option value="background">Fundo</option>
+              <option value="gameplay" selected>Jogabilidade</option>
+              <option value="collision">Colisao</option>
+              <option value="foreground">Primeiro Plano</option>
+            </select>
+            <small class="panel-help">Escolha a layer ativa para pintar tiles.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Config 2D</h3>
+            <label class="checkbox-row">
+              <input id="sceneCompositeCollider" type="checkbox" checked />
+              <span>Composite Collider</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="scenePixelPerfect" type="checkbox" />
+              <span>Pixel Perfect</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneSortByY" type="checkbox" />
+              <span>Sorting por Y (Top-Down)</span>
+            </label>
+            <label class="panel-inline-label">
+              Escala Pixel
+              <input id="scenePixelScale" type="number" min="1" max="8" step="1" value="1" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Padrao
+              <input id="sceneSurfaceFrictionDefault" type="number" min="0" max="2" step="0.01" value="0.22" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Grama
+              <input id="sceneSurfaceFrictionGrass" type="number" min="0" max="2" step="0.01" value="0.28" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Pedra
+              <input id="sceneSurfaceFrictionStone" type="number" min="0" max="2" step="0.01" value="0.16" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Areia
+              <input id="sceneSurfaceFrictionSand" type="number" min="0" max="2" step="0.01" value="0.56" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Agua
+              <input id="sceneSurfaceFrictionWater" type="number" min="0" max="2" step="0.01" value="0.86" />
+            </label>
+            <label class="panel-inline-label">
+              Atrito Lava
+              <input id="sceneSurfaceFrictionLava" type="number" min="0" max="2" step="0.01" value="0.94" />
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Visual do Editor</h3>
+            <label class="checkbox-row">
+              <input id="viewShowGrid" type="checkbox" checked />
+              <span>Mostrar Grid</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="viewShowColliders" type="checkbox" checked />
+              <span>Mostrar Colliders</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="viewShowLabels" type="checkbox" checked />
+              <span>Mostrar Labels</span>
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Camera 2D</h3>
+            <label class="panel-inline-label">
+              Modo
+              <select id="sceneCameraMode">
+                <option value="follow">Follow</option>
+                <option value="snap">Snap</option>
+              </select>
+            </label>
+            <label class="panel-inline-label">
+              Damping
+              <input id="sceneCameraDamping" type="number" min="0.01" max="2" step="0.01" value="0.16" />
+            </label>
+            <label class="panel-inline-label">
+              Dead Zone W
+              <input id="sceneCameraDeadZoneW" type="number" min="0" max="800" step="1" value="220" />
+            </label>
+            <label class="panel-inline-label">
+              Dead Zone H
+              <input id="sceneCameraDeadZoneH" type="number" min="0" max="600" step="1" value="132" />
+            </label>
+            <label class="panel-inline-label">
+              LookAhead X
+              <input id="sceneCameraLookAheadX" type="number" min="-300" max="300" step="1" value="24" />
+            </label>
+            <label class="panel-inline-label">
+              LookAhead Y
+              <input id="sceneCameraLookAheadY" type="number" min="-300" max="300" step="1" value="16" />
+            </label>
+            <label class="panel-inline-label">
+              Zoom
+              <input id="sceneCameraZoom" type="number" min="0.35" max="3" step="0.05" value="1" />
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneCameraConfine" type="checkbox" checked />
+              <span>Confinar no mundo</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneCameraFollowEdit" type="checkbox" checked />
+              <span>Seguir em modo Edit</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneCameraShakeEnabled" type="checkbox" checked />
+              <span>Camera Shake Ativo</span>
+            </label>
+            <label class="panel-inline-label">
+              Shake Intensidade
+              <input id="sceneCameraShakeIntensity" type="number" min="0" max="80" step="0.1" value="12" />
+            </label>
+            <label class="panel-inline-label">
+              Shake Duracao
+              <input id="sceneCameraShakeDuration" type="number" min="0.01" max="5" step="0.01" value="0.28" />
+            </label>
+            <label class="panel-inline-label">
+              Shake Frequencia
+              <input id="sceneCameraShakeFrequency" type="number" min="1" max="80" step="0.5" value="32" />
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Luz 2D</h3>
+            <label class="checkbox-row">
+              <input id="sceneLightingEnabled" type="checkbox" />
+              <span>Ativar luz e sombra</span>
+            </label>
+            <label class="panel-inline-label">
+              Cor Ambiente
+              <input id="sceneLightingAmbientColor" type="text" value="#0b1220" />
+            </label>
+            <label class="panel-inline-label">
+              Alpha Ambiente
+              <input id="sceneLightingAmbientAlpha" type="number" min="0" max="1" step="0.01" value="0.58" />
+            </label>
+            <label class="panel-inline-label">
+              Comprimento Sombra
+              <input id="sceneLightingShadowLength" type="number" min="20" max="800" step="1" value="110" />
+            </label>
+            <label class="panel-inline-label">
+              Alpha Sombra
+              <input id="sceneLightingShadowAlpha" type="number" min="0" max="1" step="0.01" value="0.36" />
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>UI Runtime 2D</h3>
+            <label class="checkbox-row">
+              <input id="sceneUiShowHud" type="checkbox" checked />
+              <span>Mostrar HUD</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneUiShowHints" type="checkbox" checked />
+              <span>Mostrar dicas/runtime</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="sceneUiShowPauseOverlay" type="checkbox" checked />
+              <span>Mostrar overlay de pausa</span>
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Audio Runtime 2D</h3>
+            <label class="checkbox-row">
+              <input id="sceneAudioEnabled" type="checkbox" checked />
+              <span>Audio ativo</span>
+            </label>
+            <label class="panel-inline-label">
+              Volume Master
+              <input id="sceneAudioMasterVolume" type="number" min="0" max="1" step="0.01" value="0.85" />
+            </label>
+            <label class="panel-inline-label">
+              Volume SFX
+              <input id="sceneAudioSfxVolume" type="number" min="0" max="1" step="0.01" value="0.9" />
+            </label>
+            <label class="panel-inline-label">
+              Volume Musica
+              <input id="sceneAudioMusicVolume" type="number" min="0" max="1" step="0.01" value="0" />
+            </label>
+          </section>
+
+          <section class="panel-section">
+            <h3>Controles de Camada</h3>
+            <div class="mini-tool-grid">
+              <button id="btnResetLayers" class="btn btn-tool">Resetar Camadas</button>
+            </div>
+            <div id="layerControls" class="layer-controls"></div>
+          </section>
+
+          <section class="panel-section">
+            <h3>Paleta de Tiles</h3>
+            <div id="tilePalette" class="tile-palette"></div>
+          </section>
+        </aside>
+
+        <section class="viewport-container">
+          <canvas id="viewport"></canvas>
+        </section>
+
+        <aside class="panel right-panel">
+          <div class="panel-head">
+            <h2>Inspector</h2>
+          </div>
+
+          <div id="inspectorEmpty" class="inspector-empty">
+            Selecione um objeto para editar a transformacao.
+          </div>
+
+          <form id="inspectorForm" class="inspector-form hidden" autocomplete="off">
+            <label>
+              Nome
+              <input id="fieldName" type="text" readonly />
+            </label>
+            <label>
+              Tipo
+              <input id="fieldType" type="text" readonly />
+            </label>
+            <label>
+              Estado
+              <input id="fieldState" type="text" readonly />
+            </label>
+            <div id="fieldMetaFields" class="inspector-meta-fields"></div>
+            <label>
+              X
+              <input id="fieldX" type="number" step="1" />
+            </label>
+            <label>
+              Y
+              <input id="fieldY" type="number" step="1" />
+            </label>
+            <label>
+              Z
+              <input id="fieldZ" type="number" step="1" min="0" />
+            </label>
+            <label>
+              Largura
+              <input id="fieldW" type="number" step="1" min="1" />
+            </label>
+            <label>
+              Altura
+              <input id="fieldH" type="number" step="1" min="1" />
+            </label>
+          </form>
+
+          <section class="panel-section variable-section">
+            <div class="section-head">
+              <h3>Variaveis</h3>
+              <button id="btnAddVariable" class="btn btn-tool">+ Var</button>
+            </div>
+            <div class="variable-toolbar">
+              <select id="variableScopeSelect">
+                <option value="scene" selected>Padroes da Cena</option>
+                <option value="project">Padroes do Projeto</option>
+              </select>
+              <input id="variableFilterInput" type="search" placeholder="Filtrar variaveis, predefinicoes ou valores" />
+            </div>
+            <div id="variableTemplateList" class="variable-template-list"></div>
+            <div id="variableList" class="variable-list"></div>
+            <small class="panel-help">Esses valores entram como padroes no modo JOGAR e alimentam os gatilhos `var-is` e `var-not`.</small>
+          </section>
+
+          <section class="panel-section native3d-section">
+            <div class="section-head">
+              <h3>3D Nativo</h3>
+              <div class="native3d-head-actions">
+                <span class="badge subtle">experimental</span>
+                <button id="btnResetNativeCamera" class="btn btn-tool">Resetar Camera</button>
+              </div>
+            </div>
+            <canvas id="native3dPreview" class="native3d-preview"></canvas>
+            <small class="panel-help">Primeiro renderizador 3D nativo da engine, em paralelo a visualizacao principal.</small>
+          </section>
+
+          <section class="panel-section build-section">
+            <div class="section-head">
+              <h3>Build / Exportacao</h3>
+              <span class="badge subtle">profiles</span>
+            </div>
+            <label class="panel-inline-label">
+              Perfil
+              <select id="buildProfileSelect">
+                <option value="dev" selected>dev</option>
+                <option value="test">test</option>
+                <option value="release">release</option>
+              </select>
+            </label>
+            <div class="mini-tool-grid">
+              <button id="btnApplyBuildProfile" class="btn btn-tool">Aplicar Perfil</button>
+              <button id="btnDownloadBuildConfig" class="btn btn-tool">Baixar Build</button>
+            </div>
+            <div class="build-grid">
+              <label class="panel-inline-label">
+                Build Name
+                <input id="buildNameInput" type="text" maxlength="64" />
+              </label>
+              <label class="panel-inline-label">
+                Mode
+                <select id="buildModeSelect">
+                  <option value="dev">dev</option>
+                  <option value="test">test</option>
+                  <option value="release">release</option>
+                  <option value="custom">custom</option>
+                </select>
+              </label>
+              <label class="panel-inline-label">
+                Start Scene
+                <select id="buildStartSceneSelect"></select>
+              </label>
+              <label class="checkbox-row">
+                <input id="buildIncludeEditor" type="checkbox" />
+                <span>Include Editor UI</span>
+              </label>
+              <label class="checkbox-row">
+                <input id="buildIncludeDebug" type="checkbox" />
+                <span>Include Debug Panel</span>
+              </label>
+              <label class="checkbox-row">
+                <input id="buildCompressAssets" type="checkbox" />
+                <span>Compress Assets</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel-section atlas-section">
+            <div class="section-head">
+              <h3>Atlas de Sprites</h3>
+              <div class="native3d-head-actions">
+                <button id="btnImportSpriteAtlas" class="btn btn-tool">Importar</button>
+                <button id="btnResetSpriteAtlas" class="btn btn-tool">Demo</button>
+              </div>
+            </div>
+            <textarea id="spriteAtlasEditor" spellcheck="false" class="atlas-editor"></textarea>
+            <small class="panel-help">Aceita atlas tradicional, spritesheet em grade (`frameWidth/frameHeight`) e JSON com `frames` ou `psdLayers`.</small>
+          </section>
+
+          <section class="panel-section atlas-section">
+            <div class="section-head">
+              <h3>Timeline 2D</h3>
+              <div class="native3d-head-actions">
+                <button id="btnImportTimelines" class="btn btn-tool">Importar</button>
+                <button id="btnResetTimelines" class="btn btn-tool">Demo</button>
+              </div>
+            </div>
+            <textarea id="timelineEditor" spellcheck="false" class="atlas-editor"></textarea>
+            <small class="panel-help">Sequencias de cutscene reutilizaveis (acoes: dialogo, camera, porta, variavel, timeline).</small>
+          </section>
+
+          <section class="panel-section atlas-section">
+            <div class="section-head">
+              <h3>Animacoes Sprite</h3>
+              <div class="native3d-head-actions">
+                <button id="btnImportSpriteAnimations" class="btn btn-tool">Importar</button>
+                <button id="btnResetSpriteAnimations" class="btn btn-tool">Limpar</button>
+              </div>
+            </div>
+            <textarea id="spriteAnimationEditor" spellcheck="false" class="atlas-editor"></textarea>
+            <small class="panel-help">JSON de animacoes: id, fps, loop e frames [atlas:sprite].</small>
+          </section>
+
+          <section class="panel-section atlas-section">
+            <div class="section-head">
+              <h3>Audio Clips</h3>
+              <div class="native3d-head-actions">
+                <button id="btnImportAudioClips" class="btn btn-tool">Importar</button>
+                <button id="btnResetAudioClips" class="btn btn-tool">Demo</button>
+              </div>
+            </div>
+            <textarea id="audioClipEditor" spellcheck="false" class="atlas-editor"></textarea>
+            <div class="audio-route-grid">
+              <label class="panel-inline-label">UI<select id="audioRouteUi"></select></label>
+              <label class="panel-inline-label">Trigger<select id="audioRouteTrigger"></select></label>
+              <label class="panel-inline-label">Checkpoint<select id="audioRouteCheckpoint"></select></label>
+              <label class="panel-inline-label">Portal<select id="audioRoutePortal"></select></label>
+              <label class="panel-inline-label">Pause On<select id="audioRoutePauseOn"></select></label>
+              <label class="panel-inline-label">Pause Off<select id="audioRoutePauseOff"></select></label>
+              <label class="panel-inline-label">Respawn<select id="audioRouteRespawn"></select></label>
+              <label class="panel-inline-label">Musica<select id="audioRouteMusic"></select></label>
+            </div>
+            <div class="audio-quick-grid">
+              <label class="panel-inline-label">
+                Nome
+                <input id="audioClipQuickName" type="text" placeholder="Ex: Porta SFX" />
+              </label>
+              <label class="panel-inline-label">
+                Caminho do Arquivo
+                <input id="audioClipQuickSrc" type="text" placeholder="assets/audio/minha-faixa.wav" />
+              </label>
+              <label class="panel-inline-label">
+                Tipo
+                <select id="audioClipQuickKind">
+                  <option value="ui">ui</option>
+                  <option value="trigger">trigger</option>
+                  <option value="checkpoint">checkpoint</option>
+                  <option value="portal">portal</option>
+                  <option value="pauseon">pauseon</option>
+                  <option value="pauseoff">pauseoff</option>
+                  <option value="respawn">respawn</option>
+                  <option value="music">music</option>
+                  <option value="custom">custom</option>
+                </select>
+              </label>
+              <label class="panel-inline-label">
+                Volume
+                <input id="audioClipQuickVolume" type="number" min="0" max="1" step="0.01" value="1" />
+              </label>
+              <label class="checkbox-row">
+                <input id="audioClipQuickLoop" type="checkbox" />
+                <span>Loop</span>
+              </label>
+              <button id="btnAddAudioClipQuick" class="btn btn-tool">+ Adicionar Biblioteca</button>
+            </div>
+            <div id="audioClipLibraryList" class="audio-library-list"></div>
+            <small class="panel-help">JSON de audio: id, name, src, kind(ui/trigger/checkpoint/portal/pauseon/pauseoff/respawn/music), volume e loop.</small>
+          </section>
+
+          <section class="panel-section json-section">
+            <h3>JSON do Projeto</h3>
+            <textarea id="jsonEditor" spellcheck="false"></textarea>
+          </section>
+        </aside>
+      </main>
+
+      <main class="workspace hidden workspace-3d" id="workspace3d">
+        <aside class="panel left-panel">
+          <div class="panel-head">
+            <h2>Projeto 3D</h2>
+            <span id="scene3DCountBadge" class="badge">0 cena(s)</span>
+          </div>
+
+          <section class="panel-section">
+            <div class="section-head">
+              <h3>Cenas 3D</h3>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnScene3DNew" class="btn btn-tool">+ Nova</button>
+              <button id="btnScene3DDuplicate" class="btn btn-tool">Duplicar</button>
+              <button id="btnScene3DDelete" class="btn btn-tool">Excluir</button>
+            </div>
+            <div id="scene3DList" class="scene-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-head">
+              <h3>Objetos 3D</h3>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnAddCube3D" class="btn btn-tool">+ Cubo</button>
+              <button id="btnAddPlane3D" class="btn btn-tool">+ Plano</button>
+              <button id="btnDuplicateObject3D" class="btn btn-tool">Duplicar</button>
+              <button id="btnDeleteObject3D" class="btn btn-tool">Excluir</button>
+            </div>
+            <div id="object3DList" class="scene-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <h3>Navegacao 3D</h3>
+            <button id="btnResetCamera3D" class="btn btn-tool">Resetar Camera 3D</button>
+            <small class="panel-help">Alt+arraste: orbitar | botao do meio: pan | roda do mouse: zoom.</small>
+            <div class="mini-tool-grid triple-grid">
+              <button id="btnGizmoMove3D" class="btn btn-tool active">Mover (W)</button>
+              <button id="btnGizmoRotate3D" class="btn btn-tool">Rotacionar (E)</button>
+              <button id="btnGizmoScale3D" class="btn btn-tool">Escalar (R)</button>
+            </div>
+            <div class="mini-tool-grid">
+              <button id="btnGizmoSpace3D" class="btn btn-tool">Espaco: Global (Q)</button>
+              <button id="btnGizmoSnap3D" class="btn btn-tool active">Snap: On (X)</button>
+            </div>
+            <small class="panel-help">Ctrl+N cria cena 3D. Ctrl+Shift+D duplica objeto 3D (ou cena ativa se nenhum selecionado). F foca o objeto selecionado.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Camera de Jogo 3D</h3>
+            <label class="panel-inline-label">
+              Modo de Camera
+              <select id="scene3dCameraMode">
+                <option value="third-person" selected>Terceira Pessoa</option>
+                <option value="first-person">Primeira Pessoa</option>
+              </select>
+            </label>
+            <label class="panel-inline-label">
+              Player Controlado
+              <select id="scene3dPlayerObject"></select>
+            </label>
+            <label class="panel-inline-label">
+              Velocidade de Movimento
+              <input id="scene3dMoveSpeed" type="number" min="20" max="1800" step="1" value="280" />
+            </label>
+            <label class="panel-inline-label">
+              Sensibilidade do Look
+              <input id="scene3dLookSensitivity" type="number" min="0.001" max="0.03" step="0.0005" value="0.0045" />
+            </label>
+            <label class="panel-inline-label">
+              Bob Camera 1P
+              <input id="scene3dFirstBob" type="number" min="0" max="80" step="0.1" value="7" />
+            </label>
+            <label class="panel-inline-label">
+              Distancia Camera 3P
+              <input id="scene3dThirdDistance" type="number" min="120" max="3000" step="1" value="620" />
+            </label>
+            <small class="panel-help">Modo JOGAR 3D: clique e arraste para olhar, WASD para mover, Shift para correr.</small>
+          </section>
+
+          <section class="panel-section">
+            <h3>Terreno 3D</h3>
+            <label class="checkbox-row">
+              <input id="scene3dTerrainEnabled" type="checkbox" checked />
+              <span>Ativar Terreno</span>
+            </label>
+            <div class="mini-tool-grid triple-grid">
+              <button id="btnTerrainRaise3D" class="btn btn-tool">Subir</button>
+              <button id="btnTerrainLower3D" class="btn btn-tool">Descer</button>
+              <button id="btnTerrainSmooth3D" class="btn btn-tool">Suavizar</button>
+              <button id="btnTerrainFlatten3D" class="btn btn-tool">Nivelar</button>
+              <button id="btnTerrainNoise3D" class="btn btn-tool">Ruido</button>
+              <button id="btnTerrainErode3D" class="btn btn-tool">Erosao</button>
+              <button id="btnTerrainBrushOff3D" class="btn btn-tool active">Sem Brush</button>
+              <button id="btnTerrainReset3D" class="btn btn-tool">Resetar</button>
+            </div>
+            <div class="terrain-brush-head">
+              <h4>Brushes</h4>
+              <small>Shift inverte Subir/Descer durante a pintura.</small>
+            </div>
+            <div id="terrainBrushPresetGrid3D" class="terrain-brush-presets"></div>
+            <label class="panel-inline-label">
+              Raio do Brush
+              <input id="terrainBrushRadius3D" type="number" min="1" max="20" step="1" value="3" />
+            </label>
+            <label class="panel-inline-label">
+              Opacidade
+              <input id="terrainBrushStrength3D" type="number" min="0.05" max="4" step="0.05" value="0.9" />
+            </label>
+            <label class="panel-inline-label">
+              Dureza (Hardness)
+              <input id="terrainBrushHardness3D" type="number" min="0" max="1" step="0.01" value="0.3" />
+            </label>
+            <label class="panel-inline-label">
+              Espacamento (Spacing)
+              <input id="terrainBrushSpacing3D" type="number" min="0" max="2" step="0.01" value="0.08" />
+            </label>
+            <label class="panel-inline-label">
+              Forma do Brush
+              <select id="terrainBrushShape3D">
+                <option value="circle" selected>Circulo</option>
+                <option value="square">Quadrado</option>
+                <option value="diamond">Diamante</option>
+              </select>
+            </label>
+            <label class="panel-inline-label">
+              Altura Alvo (Nivelar)
+              <input id="terrainBrushTarget3D" type="number" min="-2000" max="2000" step="1" value="0" />
+            </label>
+            <label class="panel-inline-label">
+              Escala de Ruido
+              <input id="terrainBrushNoiseScale3D" type="number" min="0.01" max="3" step="0.01" value="0.24" />
+            </label>
+            <label class="panel-inline-label">
+              Forca de Erosao
+              <input id="terrainBrushErosion3D" type="number" min="0.1" max="4" step="0.1" value="1" />
+            </label>
+            <div class="terrain-brush-head">
+              <h4>Configuracao do Heightmap</h4>
+            </div>
+            <label class="panel-inline-label">
+              Resolucao X
+              <input id="scene3dTerrainResolutionX" type="number" min="8" max="129" step="1" value="33" />
+            </label>
+            <label class="panel-inline-label">
+              Resolucao Z
+              <input id="scene3dTerrainResolutionZ" type="number" min="8" max="129" step="1" value="33" />
+            </label>
+            <label class="panel-inline-label">
+              Tamanho da Celula
+              <input id="scene3dTerrainCellSize" type="number" min="20" max="400" step="1" value="120" />
+            </label>
+            <label class="panel-inline-label">
+              Altura Maxima
+              <input id="scene3dTerrainMaxHeight" type="number" min="20" max="2000" step="1" value="420" />
+            </label>
+            <div class="mini-tool-grid">
+              <button id="btnTerrainApplySettings3D" class="btn btn-tool">Aplicar Heightmap</button>
+              <button id="btnTerrainRandomize3D" class="btn btn-tool">Gerar Ruido Base</button>
+            </div>
+            <div class="terrain-brush-head">
+              <h4>Importador Unity Heightmap</h4>
+              <small>Compativel com RAW 16-bit e PNG em tons de cinza.</small>
+            </div>
+            <input id="terrainUnityImportFile" type="file" accept=".raw,.r16,.bytes,.png,image/png" class="hidden" />
+            <div class="mini-tool-grid">
+              <button id="btnTerrainImportUnity3D" class="btn btn-tool">Importar Heightmap Unity</button>
+            </div>
+            <label class="panel-inline-label">
+              Formato
+              <select id="terrainImportFormat3D">
+                <option value="auto" selected>Auto (por extensao)</option>
+                <option value="raw16">RAW 16-bit</option>
+                <option value="png">PNG</option>
+              </select>
+            </label>
+            <label class="panel-inline-label">
+              Resolucao Origem X
+              <input id="terrainImportSourceWidth3D" type="number" min="2" max="4096" step="1" value="33" />
+            </label>
+            <label class="panel-inline-label">
+              Resolucao Origem Z
+              <input id="terrainImportSourceHeight3D" type="number" min="2" max="4096" step="1" value="33" />
+            </label>
+            <label class="panel-inline-label">
+              Endian RAW
+              <select id="terrainImportEndian3D">
+                <option value="little" selected>Little Endian (Windows)</option>
+                <option value="big">Big Endian (Mac)</option>
+              </select>
+            </label>
+            <label class="checkbox-row">
+              <input id="terrainImportFlipX3D" type="checkbox" />
+              <span>Inverter eixo X</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="terrainImportFlipZ3D" type="checkbox" checked />
+              <span>Inverter eixo Z</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="terrainImportNormalize3D" type="checkbox" />
+              <span>Normalizar altura (0..1)</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="terrainImportCentered3D" type="checkbox" />
+              <span>Centralizar em 0 (usa -altura/+altura)</span>
+            </label>
+            <label class="panel-inline-label">
+              Escala de Altura
+              <input id="terrainImportHeightScale3D" type="number" min="0.01" max="5" step="0.01" value="1" />
+            </label>
+            <label class="panel-inline-label">
+              Offset de Altura
+              <input id="terrainImportHeightOffset3D" type="number" min="-2000" max="2000" step="1" value="0" />
+            </label>
+            <small class="panel-help">Com brush ativo, clique e arraste no viewport para esculpir o terreno.</small>
+          </section>
+        </aside>
+
+        <section class="viewport-container">
+          <canvas id="viewport3d"></canvas>
+        </section>
+
+        <aside class="panel right-panel">
+          <div class="panel-head">
+            <h2>Inspector 3D</h2>
+          </div>
+
+          <div id="inspector3dEmpty" class="inspector-empty">
+            Selecione um objeto 3D para editar transform e dimensoes.
+          </div>
+
+          <form id="inspector3dForm" class="inspector-form hidden" autocomplete="off">
+            <label>
+              Nome
+              <input id="field3dName" type="text" />
+            </label>
+            <label>
+              Tipo
+              <input id="field3dType" type="text" readonly />
+            </label>
+            <label>
+              X
+              <input id="field3dX" type="number" step="0.1" />
+            </label>
+            <label>
+              Y
+              <input id="field3dY" type="number" step="0.1" />
+            </label>
+            <label>
+              Z
+              <input id="field3dZ" type="number" step="0.1" />
+            </label>
+            <label>
+              Rot X
+              <input id="field3dRX" type="number" step="0.1" />
+            </label>
+            <label>
+              Rot Y
+              <input id="field3dRY" type="number" step="0.1" />
+            </label>
+            <label>
+              Rot Z
+              <input id="field3dRZ" type="number" step="0.1" />
+            </label>
+            <label>
+              Escala X
+              <input id="field3dSX" type="number" step="0.01" min="0.05" />
+            </label>
+            <label>
+              Escala Y
+              <input id="field3dSY" type="number" step="0.01" min="0.05" />
+            </label>
+            <label>
+              Escala Z
+              <input id="field3dSZ" type="number" step="0.01" min="0.05" />
+            </label>
+            <label>
+              Largura
+              <input id="field3dW" type="number" step="0.1" min="10" />
+            </label>
+            <label>
+              Altura
+              <input id="field3dH" type="number" step="0.1" min="10" />
+            </label>
+            <label>
+              Profundidade
+              <input id="field3dD" type="number" step="0.1" min="10" />
+            </label>
+            <label>
+              Cor
+              <input id="field3dColor" type="text" />
+            </label>
+          </form>
+        </aside>
+      </main>
+
+      <footer class="statusbar">
+        <span id="statusText">Engine pronta.</span>
+        <div class="status-metrics">
+          <span id="fpsLabel">FPS: 0</span>
+          <span id="cameraLabel">Camera: 0,0</span>
+          <span id="toolLabel">Ferramenta: Selecionar</span>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="app/main.mjs"></script>
+  </body>
+</html>
+
