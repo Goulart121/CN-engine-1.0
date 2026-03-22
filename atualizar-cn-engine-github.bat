@@ -34,7 +34,7 @@ set "WORKTREE_STATUS="
 for /f "usebackq delims=" %%i in (`"%GIT_EXE%" status --porcelain`) do set "WORKTREE_STATUS=dirty"
 if defined WORKTREE_STATUS (
   echo Existem alteracoes locais nao commitadas.
-  echo Faça commit ou backup antes de atualizar do GitHub.
+  echo Faca commit ou backup antes de atualizar do GitHub.
   pause
   exit /b 1
 )
