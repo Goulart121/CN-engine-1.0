@@ -41,6 +41,25 @@ npm.cmd start
 
 - `http://127.0.0.1:3600`
 
+## Scripts Windows e GitHub
+
+Repositorio GitHub atual:
+
+- `https://github.com/Goulart121/CN-engine-1.0.git`
+
+Scripts prontos na raiz do projeto:
+
+- `start-cn-engine.bat`: inicia o servidor local da CN Engine
+- `publicar-cn-engine-github.bat`: faz `git add`, cria commit e envia as alteracoes para o GitHub
+- `atualizar-cn-engine-github.bat`: baixa as alteracoes do GitHub para o projeto local com `pull --ff-only`
+- `atualizar-e-iniciar-cn-engine.bat`: atualiza do GitHub, sincroniza dependencias com `npm.cmd install` e inicia a CN Engine
+
+Observacoes:
+
+- os scripts de atualizacao param automaticamente se houver alteracoes locais nao commitadas
+- o servidor local continua rodando em `http://127.0.0.1:3600`
+- para uso rapido no Windows, basta dar duplo clique no `.bat` desejado
+
 ## Testes
 
 ```bash
